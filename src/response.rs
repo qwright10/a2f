@@ -3,7 +3,7 @@
 use std::fmt;
 
 /// The response data from APNs.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Response {
     /// If the notification was not successful, has the body content from APNs.
     pub error: Option<ErrorBody>,
@@ -27,7 +27,7 @@ pub struct Response {
 }
 
 /// The response body from APNs. Only available for errors.
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Deserialize, Debug, PartialEq, Eq)]
 pub struct ErrorBody {
     /// The error indicating the reason for the failure.
     pub reason: ErrorReason,
@@ -42,7 +42,7 @@ pub struct ErrorBody {
 }
 
 /// A description what went wrong with the push notification.
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Deserialize, Debug, PartialEq, Eq)]
 pub enum ErrorReason {
     /// The collapse identifier exceeds the maximum allowed size.
     BadCollapseId,
