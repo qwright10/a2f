@@ -272,7 +272,7 @@ impl Client {
         if let Some(ref apns_priority) = options.apns_priority {
             builder = builder.header("apns-priority", apns_priority.to_string().as_bytes());
         }
-        if let Some(apns_id) = options.apns_id {
+        if let Some(ref apns_id) = options.apns_id {
             builder = builder.header("apns-id", apns_id.as_bytes());
         }
         if let Some(apns_push_type) = options.apns_push_type.as_ref() {
@@ -284,7 +284,7 @@ impl Client {
         if let Some(ref apns_collapse_id) = options.apns_collapse_id {
             builder = builder.header("apns-collapse-id", apns_collapse_id.value.as_bytes());
         }
-        if let Some(apns_topic) = options.apns_topic {
+        if let Some(ref apns_topic) = options.apns_topic {
             builder = builder.header("apns-topic", apns_topic.as_bytes());
         }
         if let Some(ref signer) = self.options.signer {
@@ -529,7 +529,7 @@ jDwmlD1Gg0yJt1e38djFwsxsfr5q2hv0Rj9fTEqAPr8H7mGm0wKxZ7iQ
         let payload = builder.build(
             "a_test_id",
             NotificationOptions {
-                apns_id: Some("a-test-apns-id"),
+                apns_id: Some("a-test-apns-id".into()),
                 ..Default::default()
             },
         );
@@ -625,7 +625,7 @@ jDwmlD1Gg0yJt1e38djFwsxsfr5q2hv0Rj9fTEqAPr8H7mGm0wKxZ7iQ
         let payload = builder.build(
             "a_test_id",
             NotificationOptions {
-                apns_topic: Some("a_topic"),
+                apns_topic: Some("a_topic".into()),
                 ..Default::default()
             },
         );

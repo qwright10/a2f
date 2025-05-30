@@ -43,7 +43,7 @@ pub struct DefaultSound<'a> {
     critical: bool,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    name: Option<&'a str>,
+    name: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     volume: Option<f64>,
@@ -53,31 +53,67 @@ pub struct DefaultSound<'a> {
 #[serde(rename_all = "kebab-case")]
 pub struct DefaultAlert<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    title: Option<&'a str>,
+    title: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    subtitle: Option<&'a str>,
+    subtitle: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    body: Option<&'a str>,
+    body: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    title_loc_key: Option<&'a str>,
+    title_loc_key: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     title_loc_args: Option<Vec<Cow<'a, str>>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    action_loc_key: Option<&'a str>,
+    action_loc_key: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    loc_key: Option<&'a str>,
+    loc_key: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     loc_args: Option<Vec<Cow<'a, str>>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    launch_image: Option<&'a str>,
+    launch_image: Option<Cow<'a, str>>,
+}
+
+impl<'a> DefaultAlert<'a> {
+    /// Converts all `Cow`s to owned data
+    pub fn to_static(&self) -> DefaultAlert<'static> {
+        DefaultAlert {
+            title: self.title.clone()
+                .map(|cow| Cow::Owned(cow.into_owned())),
+            subtitle: self.subtitle.clone()
+                .map(|cow| Cow::Owned(cow.into_owned())),
+            body: self.body.clone()
+                .map(|cow| Cow::Owned(cow.into_owned())),
+            title_loc_key: self.body.clone()
+                .map(|cow| Cow::Owned(cow.into_owned())),
+            title_loc_args: self.title_loc_args.as_ref()
+                .map(|vec| {
+                    vec
+                        .into_iter()
+                        .map(|cow| Cow::Owned(cow.clone().into_owned()))
+                        .collect()
+                }),
+            action_loc_key: self.action_loc_key.clone()
+                .map(|cow| Cow::Owned(cow.clone().into_owned())),
+            loc_key: self.loc_key.clone()
+                .map(|cow| Cow::Owned(cow.clone().into_owned())),
+            loc_args: self.loc_args.as_ref()
+                .map(|vec| {
+                    vec
+                        .into_iter()
+                        .map(|cow| Cow::Owned(cow.clone().into_owned()))
+                        .collect()
+                }),
+            launch_image: self.launch_image.clone()
+                .map(|cow| Cow::Owned(cow.clone().into_owned())),
+        }
+    }
 }
 
 /// A builder to create an APNs payload.
@@ -113,7 +149,7 @@ pub struct DefaultNotificationBuilder<'a> {
     alert: DefaultAlert<'a>,
     badge: Option<u32>,
     sound: DefaultSound<'a>,
-    category: Option<&'a str>,
+    category: Option<Cow<'a, str>>,
     mutable_content: u8,
     content_available: Option<u8>,
     has_edited_alert: bool,
@@ -181,8 +217,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_title(mut self, title: &'a str) -> Self {
-        self.alert.title = Some(title);
+    pub fn set_title(mut self, title: impl Into<Cow<'a, str>>) -> Self {
+        self.alert.title = Some(title.into());
         self.has_edited_alert = true;
         self
     }
@@ -232,8 +268,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_subtitle(mut self, subtitle: &'a str) -> Self {
-        self.alert.subtitle = Some(subtitle);
+    pub fn set_subtitle(mut self, subtitle: impl Into<Cow<'a, str>>) -> Self {
+        self.alert.subtitle = Some(subtitle.into());
         self.has_edited_alert = true;
         self
     }
@@ -254,8 +290,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_body(mut self, body: &'a str) -> Self {
-        self.alert.body = Some(body);
+    pub fn set_body(mut self, body: impl Into<Cow<'a, str>>) -> Self {
+        self.alert.body = Some(body.into());
         self
     }
 
@@ -297,8 +333,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_sound(mut self, sound: &'a str) -> Self {
-        self.sound.name = Some(sound);
+    pub fn set_sound(mut self, sound: impl Into<Cow<'a, str>>) -> Self {
+        self.sound.name = Some(sound.into());
         self
     }
 
@@ -320,8 +356,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_category(mut self, category: &'a str) -> Self {
-        self.category = Some(category);
+    pub fn set_category(mut self, category: impl Into<Cow<'a, str>>) -> Self {
+        self.category = Some(category.into());
         self
     }
 
@@ -342,8 +378,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_title_loc_key(mut self, key: &'a str) -> Self {
-        self.alert.title_loc_key = Some(key);
+    pub fn set_title_loc_key(mut self, key: impl Into<Cow<'a, str>>) -> Self {
+        self.alert.title_loc_key = Some(key.into());
         self.has_edited_alert = true;
         self
     }
@@ -393,8 +429,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_action_loc_key(mut self, key: &'a str) -> Self {
-        self.alert.action_loc_key = Some(key);
+    pub fn set_action_loc_key(mut self, key: impl Into<Cow<'a, str>>) -> Self {
+        self.alert.action_loc_key = Some(key.into());
         self.has_edited_alert = true;
         self
     }
@@ -416,8 +452,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_loc_key(mut self, key: &'a str) -> Self {
-        self.alert.loc_key = Some(key);
+    pub fn set_loc_key(mut self, key: impl Into<Cow<'a, str>>) -> Self {
+        self.alert.loc_key = Some(key.into());
         self.has_edited_alert = true;
         self
     }
@@ -467,8 +503,8 @@ impl<'a> DefaultNotificationBuilder<'a> {
     /// );
     /// # }
     /// ```
-    pub fn set_launch_image(mut self, image: &'a str) -> Self {
-        self.alert.launch_image = Some(image);
+    pub fn set_launch_image(mut self, image: impl Into<Cow<'a, str>>) -> Self {
+        self.alert.launch_image = Some(image.into());
         self.has_edited_alert = true;
         self
     }
@@ -519,7 +555,7 @@ impl<'a> DefaultNotificationBuilder<'a> {
 }
 
 impl<'a> NotificationBuilder<'a> for DefaultNotificationBuilder<'a> {
-    fn build(self, device_token: &'a str, options: NotificationOptions<'a>) -> Payload<'a> {
+    fn build(self, device_token: impl Into<Cow<'a, str>>, options: NotificationOptions<'a>) -> Payload<'a> {
         Payload {
             aps: APS {
                 alert: match self.has_edited_alert {
@@ -537,7 +573,7 @@ impl<'a> NotificationBuilder<'a> for DefaultNotificationBuilder<'a> {
                 mutable_content: Some(self.mutable_content),
                 url_args: None,
             },
-            device_token,
+            device_token: device_token.into(),
             options,
             data: BTreeMap::new(),
         }

@@ -3,6 +3,7 @@ use crate::error::Error;
 use crate::request::notification::{DefaultAlert, DefaultSound, NotificationOptions, WebPushAlert};
 use erased_serde::Serialize;
 use serde_json::{self, Value};
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 
@@ -14,12 +15,12 @@ pub struct Payload<'a> {
     pub options: NotificationOptions<'a>,
     /// The token for the receiving device
     #[serde(skip)]
-    pub device_token: &'a str,
+    pub device_token: Cow<'a, str>,
     /// The pre-defined notification payload
     pub aps: APS<'a>,
     /// Application specific payload
     #[serde(flatten)]
-    pub data: BTreeMap<&'a str, Value>,
+    pub data: BTreeMap<Cow<'a, str>, Value>,
 }
 
 /// Object that can be serialized to create an APNS request.
@@ -27,6 +28,7 @@ pub struct Payload<'a> {
 ///
 /// # Example
 /// ```no_run
+/// use std::borrow::Cow;
 /// use a2::request::notification::{NotificationBuilder, NotificationOptions};
 /// use a2::request::payload::{PayloadLike, APS};
 /// use a2::{Client, ClientConfig, DefaultNotificationBuilder, Endpoint};
@@ -57,12 +59,12 @@ pub struct Payload<'a> {
 ///     #[serde(skip_serializing)]
 ///     options: NotificationOptions<'a>,
 ///     #[serde(skip_serializing)]
-///     device_token: &'a str,
+///     device_token: Cow<'a, str>,
 /// }
 ///
 /// impl<'a> PayloadLike for Payload<'a> {
-///     fn get_device_token(&self) -> &'a str {
-///         self.device_token
+///     fn get_device_token(&self) -> Cow<'a, str> {
+///         self.device_token.clone()
 ///     }
 ///     fn get_options(&self) -> &NotificationOptions {
 ///         &self.options
@@ -78,15 +80,15 @@ pub trait PayloadLike: serde::Serialize + Debug {
     }
 
     /// Returns token for the device
-    fn get_device_token(&self) -> &str;
+    fn get_device_token(&self) -> Cow<'_, str>;
 
     /// Gets [`NotificationOptions`] for this Payload.
     fn get_options(&self) -> &NotificationOptions;
 }
 
 impl<'a> PayloadLike for Payload<'a> {
-    fn get_device_token(&self) -> &'a str {
-        self.device_token
+    fn get_device_token(&self) -> Cow<'a, str> {
+        self.device_token.clone()
     }
 
     fn get_options(&self) -> &NotificationOptions {
@@ -149,8 +151,8 @@ impl<'a> Payload<'a> {
     /// );
     /// }
     /// ```
-    pub fn add_custom_data(&mut self, root_key: &'a str, data: &dyn Serialize) -> Result<&mut Self, Error> {
-        self.data.insert(root_key, serde_json::to_value(data)?);
+    pub fn add_custom_data(&mut self, root_key: impl Into<Cow<'a, str>>, data: &dyn Serialize) -> Result<&mut Self, Error> {
+        self.data.insert(root_key.into(), serde_json::to_value(data)?);
 
         Ok(self)
     }
@@ -180,7 +182,7 @@ pub struct APS<'a> {
     /// When a notification includes the category key, the system displays the
     /// actions for that category as buttons in the banner or alert interface.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub category: Option<&'a str>,
+    pub category: Option<Cow<'a, str>>,
 
     /// If set to one, the app can change the notification content before
     /// displaying it to the user.
@@ -188,7 +190,7 @@ pub struct APS<'a> {
     pub mutable_content: Option<u8>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub url_args: Option<&'a [&'a str]>,
+    pub url_args: Option<Cow<'a, [Cow<'a, str>]>>,
 }
 
 /// Different notification content types.
@@ -200,7 +202,7 @@ pub enum APSAlert<'a> {
     /// Safari web push notification
     WebPush(WebPushAlert<'a>),
     /// A notification with just a body
-    Body(&'a str),
+    Body(Cow<'a, str>),
 }
 
 /// Different notification sound types.
@@ -210,5 +212,5 @@ pub enum APSSound<'a> {
     /// A critical notification (supported only on >= iOS 12)
     Critical(DefaultSound<'a>),
     /// Name for a notification sound
-    Sound(&'a str),
+    Sound(Cow<'a, str>),
 }

@@ -1,5 +1,6 @@
 use crate::error::Error;
 use parking_lot::RwLock;
+use std::borrow::Cow;
 use std::io::Read;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -41,12 +42,12 @@ enum JwtAlg {
 #[derive(Serialize, Deserialize)]
 struct JwtHeader<'a> {
     alg: JwtAlg,
-    kid: &'a str,
+    kid: Cow<'a, str>,
 }
 
 #[derive(Serialize, Deserialize)]
 struct JwtPayload<'a> {
-    iss: &'a str,
+    iss: Cow<'a, str>,
     iat: i64,
 }
 
@@ -154,11 +155,11 @@ impl Signer {
     fn create_signature(secret: &Secret, key_id: &str, team_id: &str, issued_at: i64) -> Result<String, Error> {
         let headers = JwtHeader {
             alg: JwtAlg::ES256,
-            kid: key_id,
+            kid: key_id.into(),
         };
 
         let payload = JwtPayload {
-            iss: team_id,
+            iss: team_id.into(),
             iat: issued_at,
         };
 

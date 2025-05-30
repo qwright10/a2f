@@ -1,14 +1,16 @@
+use std::borrow::Cow;
 use crate::error::Error;
 use std::fmt;
 
 #[derive(Debug, Clone)]
 pub struct CollapseId<'a> {
-    pub value: &'a str,
+    pub value: Cow<'a, str>,
 }
 
 /// A collapse-id container. Will not allow bigger id's than 64 bytes.
 impl<'a> CollapseId<'a> {
-    pub fn new(value: &'a str) -> Result<CollapseId<'a>, Error> {
+    pub fn new(value: impl Into<Cow<'a, str>>) -> Result<CollapseId<'a>, Error> {
+        let value = value.into();
         if value.len() > 64 {
             Err(Error::InvalidOptions(String::from(
                 "The collapse-id is too big. Maximum 64 bytes.",
@@ -73,7 +75,7 @@ pub struct NotificationOptions<'a> {
     /// A canonical UUID that identifies the notification. If there is an error
     /// sending the notification, APNs uses this value to identify the
     /// notification to your server.
-    pub apns_id: Option<&'a str>,
+    pub apns_id: Option<Cow<'a, str>>,
 
     /// The apns-push-type header field has the following valid values.
     ///
@@ -108,7 +110,7 @@ pub struct NotificationOptions<'a> {
     /// If you are using a provider token instead of a certificate, you must
     /// specify a value for this request header. The topic you provide should be
     /// provisioned for the your team named in your developer account.
-    pub apns_topic: Option<&'a str>,
+    pub apns_topic: Option<Cow<'a, str>>,
 
     /// Multiple notifications with the same collapse identifier are displayed to the
     /// user as a single notification. The value of this key must not exceed 64
